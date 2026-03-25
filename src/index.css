@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-rojo-gdg: #ea4335;
+  --color-azul-gdg: #4285f4;
+  --color-verde-gdg: #34a853;
+  --color-amarillo-gdg: #fbbc04;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
