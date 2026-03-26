@@ -44,7 +44,7 @@ export default function Transacciones() {
   };
 
   return (
-    <div className="bg-background min-h-screen p-8">
+    <div className="animate-in fade-in duration-500">
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="border-outline flex items-center justify-between border-b pb-6">
           <div className="space-y-1">

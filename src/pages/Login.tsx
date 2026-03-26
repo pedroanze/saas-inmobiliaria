@@ -54,7 +54,7 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-background flex min-h-screen flex-col items-center justify-center p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
+    <div className="bg-background flex min-h-screen flex-col items-center justify-center p-8 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/10 via-background to-background">
       <div className="bg-surface shadow-float relative w-full max-w-md overflow-hidden rounded-xl border border-white/10 p-8 backdrop-blur-md">
         <div className="via-primary/50 absolute top-0 left-0 h-1 w-full bg-linear-to-r from-transparent to-transparent"></div>
 

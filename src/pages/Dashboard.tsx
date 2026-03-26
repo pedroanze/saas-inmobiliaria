@@ -1,18 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="bg-background min-h-screen p-8">
+    <div className="animate-in fade-in duration-500">
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="border-outline flex items-center justify-between border-b pb-6">
           <div className="space-y-1">
@@ -24,13 +16,7 @@ export default function Dashboard() {
               <span className="text-on-surface font-medium">{user?.email}</span>
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 border-outline"
-          >
-            Cerrar Sesión
-          </Button>
+          {/* El botón de cerrar sesión se movió al TopNav, pero lo dejamos por compatibilidad o lo quitamos */}
         </header>
 
         <main className="grid gap-6 md:grid-cols-3">
