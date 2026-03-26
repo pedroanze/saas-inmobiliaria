@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersService, type FullUserProfile } from '@/services/usersService';
@@ -36,7 +37,9 @@ export function TopNav() {
 
   // Tratamos de obtener el nombre; si no, el email o un fallback
   const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email || 'Usuario';
-  const initial = userName.charAt(0).toUpperCase();
+  const companyName = profile?.companies?.name || 'Empresa';
+  const companyLogo = profile?.companies?.logo_url || '';
+  const initial = companyName.charAt(0).toUpperCase();
 
   return (
     <header className="bg-surface flex h-16 shrink-0 items-center justify-between border-b px-4 lg:px-8">
@@ -83,21 +86,23 @@ export function TopNav() {
 
       <div className="flex items-center gap-4">
         <DropdownMenu>
-          <DropdownMenuTrigger className="relative h-9 w-9 rounded-full outline-none focus:ring-2 focus:ring-primary/50">
+          <DropdownMenuTrigger className="relative h-9 w-9 rounded-full outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer">
             <Avatar className="h-9 w-9 border border-outline/50 shadow-sm transition-transform hover:scale-105">
-              <AvatarImage src={user?.user_metadata?.avatar_url || ''} alt={userName} />
+              <AvatarImage src={companyLogo} alt={companyName} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">{initial}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel className="font-normal text-on-surface">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userName}</p>
-                <p className="text-xs leading-none text-secondary truncate">
-                  {user?.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal text-on-surface">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{userName}</p>
+                  <p className="text-xs leading-none text-secondary truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/ajustes')} className="cursor-pointer">
               <UserIcon className="mr-2 h-4 w-4" />
