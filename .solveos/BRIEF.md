@@ -1,38 +1,36 @@
-## Plan Brief: MVP de Registro (Transacciones e Inventario)
+## Plan Brief: Pulir y Validar Auth (Login)
 
 **Problema**
-Las inmobiliarias y casas de empeño registran ventas, compras y préstamos en medios físicos (recibos, cuadernos) o herramientas rudimentarias (Excel). Esto consume tiempo y genera un registro propenso a errores, difícil de auditar y con carencias para escalar el negocio.
+El inicio de sesión funcional básico está implementado (Supabase), pero la interfaz es plana y carece de feedback visual claro (errores, éxito, loading). Además faltan validaciones de formulario robustas y confirmación de que los Guards protegen las rutas correctamente.
 
 **Audiencia**
-Dueños de las casas/inmobiliarias (que necesitan ver las métricas) y sus empleados (que registran las operaciones del día a día).
+Dueños de las inmobiliarias/casas de empeño y sus empleados.
 
 **Objetivo**
-Construir el MVP del sistema que permita registrar, visualizar y gestionar un inventario básico y transacciones (compras, ventas, préstamos), para centralizar y digitalizar la operación manual.
+Refinar el flujo de inicio de sesión con una interfaz de usuario premium (Terracotta Silk), notificaciones estandarizadas tipo Toast, validaciones de texto y Guards de ruta activos.
 
 **Apetito**
-Lo estrictamente indispensable para tener la funcionalidad "core" funcionando de manera robusta y limpia. Nos enfocaremos solo en las transacciones para este primer ciclo.
+Solo enfocado en el flujo de Login existente. Mejoras visuales y de UX.
 
 **Restricciones**
-- Interfaz limpia, profesional y alineada con la filosofía "Legibilidad y orden > Velocidad".
-- Uso estricto de React, Tailwind CSS v4, y Shadcn UI.
-- Los componentes deben mantenerse pequeños y específicos, siguiendo DRY y KISS.
-- Almacenamiento conectado al stack existente (Supabase).
+- UI debe mantener la estética premium, limpia y seria.
+- Uso de componentes Shadcn UI (añadir sistema de Toasts).
+- Validación de formulario clara para el usuario (emails inválidos, contraseñas vacías).
 
 **Criterios de éxito**
-- [ ] La página `Transacciones.tsx` muestra un listado/tabla de transacciones.
-- [ ] Existe un formulario para registrar una nueva transacción (venta, compra, o préstamo).
-- [ ] Cada transacción distingue claramente su tipo y monto básico.
-- [ ] La interfaz cumple con el diseño "Terracotta Silk" (premium, moderno y limpio).
+- [ ] La pantalla de `Login.tsx` tiene un diseño atractivo ("interesante") y alineado con el sistema de diseño.
+- [ ] El formulario valida el formato de entrada (email y contraseña requerida) antes de enviar a Supabase.
+- [ ] Sistema de Toasts implementado: Notifica si hay error de credenciales ("Usuario o contraseña incorrectos") o éxito.
+- [ ] El `AuthGuard` impide el acceso a rutas protegidas (ej. `/dashboard`, `/transacciones`) redirigiendo al login.
 
 **Supuesto central**
-Disponemos de un esquema de base de datos base (o podemos crearlo) en Supabase para almacenar la información de la transacción sin requerir relaciones extremadamente complejas en esta fase MVP.
+La conexión subyacente de Supabase (AuthClient) ya valida contra el backend; solo necesitamos enlazar adecuadamente los errores a la UI.
 
 **Pozos sin fondo**
-- Sistema avanzado de impresión de Invoices/Recibos en PDF (se posterga para la iteración 2).
-- Dashboard visual de métricas del negocio (se posterga hasta tener datos reales fluyendo).
-- Permisos complejos de Auth entre dueños y empleados.
+- Flujos de recuperación de contraseña ("Olvidé mi contraseña").
+- Creación y registro de nuevas cuentas públicas (Sign up).
+- Roles complejos (RBAC) dentro del guard; por ahora solo verificamos sesión activa vs no activa.
 
 **Fuera de alcance**
-- Reportes exportables.
-- Notificaciones automáticas.
-- Historial exhaustivo de modificaciones en caja.
+- Perfil de usuario o edición de avatar.
+- SSO con Google / Microsoft.
