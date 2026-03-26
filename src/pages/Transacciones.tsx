@@ -29,7 +29,7 @@ export default function Transacciones() {
     }
   };
 
-  const handleAddTransaction = async (data: TransactionInsert) => {
+  const handleAddTransaction = async (data: Omit<TransactionInsert, 'company_id' | 'user_id'>) => {
     try {
       setIsSubmitting(true);
       const newTx = await transactionsService.createTransaction(data);

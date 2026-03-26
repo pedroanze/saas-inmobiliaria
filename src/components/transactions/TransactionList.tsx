@@ -31,7 +31,7 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
     );
   }
 
-  const getTypeBadge = (type: Transaction['type']) => {
+  const getTypeBadge = (type: string) => {
     switch (type) {
       case 'buy':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Compra</Badge>;
@@ -44,7 +44,8 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -61,7 +62,7 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
           <TableRow>
             <TableHead>Fecha</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>Descripción</TableHead>
+            <TableHead>Concepto</TableHead>
             <TableHead className="text-right">Monto</TableHead>
           </TableRow>
         </TableHeader>
@@ -70,8 +71,8 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
             <TableRow key={tx.id}>
               <TableCell className="font-medium">{formatDate(tx.created_at)}</TableCell>
               <TableCell>{getTypeBadge(tx.type)}</TableCell>
-              <TableCell className="max-w-[200px] truncate" title={tx.description}>
-                {tx.description || '-'}
+              <TableCell className="max-w-[200px] truncate" title={tx.concept}>
+                {tx.concept || '-'}
               </TableCell>
               <TableCell className="text-right font-semibold">
                 ${tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
