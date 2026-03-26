@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, User as UserIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { usersService, type FullUserProfile } from '@/services/usersService';
 import { navigationLinks } from './Sidebar';
 import { cn } from '@/lib/utils';
 
@@ -18,9 +20,22 @@ export function TopNav() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<FullUserProfile | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchName() {
+      const data = await usersService.getCurrentUserProfile();
+      if (mounted) {
+        setProfile(data);
+      }
+    }
+    fetchName();
+    return () => { mounted = false; };
+  }, []);
 
   // Tratamos de obtener el nombre; si no, el email o un fallback
-  const userName = user?.user_metadata?.full_name || user?.email || 'Usuario';
+  const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email || 'Usuario';
   const initial = userName.charAt(0).toUpperCase();
 
   return (
