@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+
 export default function App() {
   return (
     <div className="bg-background flex min-h-screen flex-col items-center justify-center p-8">
@@ -25,9 +27,7 @@ export default function App() {
             />
           </div>
 
-          <button className="bg-primary text-on-primary hover:shadow-subtle w-full rounded-sm py-2.5 text-[14px] font-medium transition-all duration-200 hover:scale-[0.98]">
-            Sign In
-          </button>
+          <Button className="w-full">Sign In</Button>
         </div>
       </div>
     </div>
