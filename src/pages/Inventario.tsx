@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { inventoryService } from '@/services/inventoryService';
 import { InventoryList } from '@/components/inventory/InventoryList';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { toast } from 'sonner';
 
-// Tipo mínimo necesario para el listado (refleja la forma real de los datos de Supabase)
 type InventoryItemRow = Awaited<ReturnType<typeof inventoryService.getInventoryItems>>[number];
 
 export default function Inventario() {
-  const navigate = useNavigate();
   const [items, setItems] = useState<InventoryItemRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,28 +28,11 @@ export default function Inventario() {
   };
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <header className="border-outline flex items-center justify-between border-b pb-6">
-          <div className="space-y-1">
-            <h1 className="text-on-surface text-2xl font-bold">Inventario</h1>
-            <p className="text-secondary text-sm">Gestión de propiedades, compras y empeños</p>
-          </div>
-          <div className="flex space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/dashboard')}
-              className="border-outline"
-            >
-              Volver
-            </Button>
-          </div>
-        </header>
-
-        <main>
-          <InventoryList items={items} isLoading={isLoading} />
-        </main>
-      </div>
-    </div>
+    <PageLayout
+      title="Inventario"
+      subtitle={`${items.length} artículo${items.length !== 1 ? 's' : ''} registrado${items.length !== 1 ? 's' : ''}`}
+    >
+      <InventoryList items={items} isLoading={isLoading} />
+    </PageLayout>
   );
 }

@@ -11,7 +11,7 @@ export default function DashboardLayout() {
         {/* Main scrollable area */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           {/* Outlet is where child routes render */}
-          <div className="container mx-auto p-4 md:p-6 lg:p-8">
+          <div className="px-6 py-6 lg:px-8">
              <Outlet />
           </div>
         </main>
