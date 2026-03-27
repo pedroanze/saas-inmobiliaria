@@ -1,13 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowRightLeft, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-export const navigationLinks = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Inventario', href: '/inventario', icon: Package },
-  { name: 'Transacciones', href: '/transacciones', icon: ArrowRightLeft },
-  { name: 'Ajustes', href: '/ajustes', icon: Settings },
-];
+import { navigationLinks } from './navigationLinks';
 
 export function Sidebar() {
   const location = useLocation();

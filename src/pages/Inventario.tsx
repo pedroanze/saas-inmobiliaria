@@ -1,32 +1,56 @@
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { inventoryService } from '@/services/inventoryService';
+import { InventoryList } from '@/components/inventory/InventoryList';
+import { toast } from 'sonner';
+
+// Tipo mínimo necesario para el listado (refleja la forma real de los datos de Supabase)
+type InventoryItemRow = Awaited<ReturnType<typeof inventoryService.getInventoryItems>>[number];
 
 export default function Inventario() {
   const navigate = useNavigate();
+  const [items, setItems] = useState<InventoryItemRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setIsLoading(true);
+      const data = await inventoryService.getInventoryItems();
+      setItems(data);
+    } catch (error) {
+      console.error('Failed to load inventory', error);
+      toast.error('Ocurrió un error al cargar el inventario.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-background min-h-screen p-8">
-      <div className="mx-auto max-w-5xl space-y-8">
+    <div className="animate-in fade-in duration-500">
+      <div className="mx-auto max-w-6xl space-y-8">
         <header className="border-outline flex items-center justify-between border-b pb-6">
           <div className="space-y-1">
             <h1 className="text-on-surface text-2xl font-bold">Inventario</h1>
-            <p className="text-secondary text-sm">Gestión de propiedades</p>
+            <p className="text-secondary text-sm">Gestión de propiedades, compras y empeños</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
-            className="border-outline"
-          >
-            Volver al Dashboard
-          </Button>
+          <div className="flex space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="border-outline"
+            >
+              Volver
+            </Button>
+          </div>
         </header>
 
         <main>
-          <div className="bg-surface shadow-float mt-8 flex min-h-[400px] flex-col items-center justify-center rounded-sm p-8">
-            <p className="text-secondary text-lg">
-              Módulo de Inventario en construcción...
-            </p>
-          </div>
+          <InventoryList items={items} isLoading={isLoading} />
         </main>
       </div>
     </div>

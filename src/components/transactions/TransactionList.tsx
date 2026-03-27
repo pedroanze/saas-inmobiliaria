@@ -7,10 +7,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { Transaction } from '@/types/transaction';
+
+/** Subconjunto de campos de transacciones que la tabla necesita renderizar */
+interface TransactionRow {
+  id: string;
+  type: string;
+  concept: string | null;
+  amount: number;
+  created_at: string | null;
+  inventory: { name: string } | null;
+}
 
 interface TransactionListProps {
-  transactions: Transaction[];
+  transactions: TransactionRow[];
   isLoading: boolean;
 }
 
@@ -33,12 +42,13 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case 'buy':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Compra</Badge>;
       case 'sell':
-        return <Badge variant="secondary" className="bg-green-100 text-green-700">Venta</Badge>;
+      case 'income':
+        return <Badge variant="secondary" className="bg-green-100 text-green-700">Ingreso</Badge>;
+      case 'buy':
       case 'loan':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">Préstamo</Badge>;
+      case 'expense':
+        return <Badge variant="secondary" className="bg-red-100 text-red-700">Egreso</Badge>;
       default:
         return <Badge variant="outline">{type}</Badge>;
     }
@@ -63,6 +73,7 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
             <TableHead>Fecha</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead>Concepto</TableHead>
+            <TableHead>Artículo Vinculado</TableHead>
             <TableHead className="text-right">Monto</TableHead>
           </TableRow>
         </TableHeader>
@@ -71,8 +82,11 @@ export function TransactionList({ transactions, isLoading }: TransactionListProp
             <TableRow key={tx.id}>
               <TableCell className="font-medium">{formatDate(tx.created_at)}</TableCell>
               <TableCell>{getTypeBadge(tx.type)}</TableCell>
-              <TableCell className="max-w-[200px] truncate" title={tx.concept}>
+              <TableCell className="max-w-[200px] truncate" title={tx.concept ?? undefined}>
                 {tx.concept || '-'}
+              </TableCell>
+              <TableCell className="text-secondary truncate max-w-[150px]">
+                {tx.inventory?.name || '-'}
               </TableCell>
               <TableCell className="text-right font-semibold">
                 ${tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}

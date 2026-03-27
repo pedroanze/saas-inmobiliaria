@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersService, type FullUserProfile } from '@/services/usersService';
-import { navigationLinks } from './Sidebar';
+import { navigationLinks } from './navigationLinks';
 import { cn } from '@/lib/utils';
 
 export function TopNav() {

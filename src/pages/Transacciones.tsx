@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { transactionsService } from '@/services/transactionsService';
-import type { Transaction, TransactionInsert } from '@/types/transaction';
+import type { TransactionRow } from '@/services/transactionsService';
+import type { TransactionPayload } from '@/components/transactions/transaction.types';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { toast } from 'sonner';
 
 export default function Transacciones() {
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -29,15 +31,14 @@ export default function Transacciones() {
     }
   };
 
-  const handleAddTransaction = async (data: Omit<TransactionInsert, 'company_id' | 'user_id'>) => {
+  const handleAddTransaction = async (payload: TransactionPayload) => {
     try {
       setIsSubmitting(true);
-      const newTx = await transactionsService.createTransaction(data);
-      // Prepend the new transaction to the list to avoid refetching everything
-      setTransactions((prev) => [newTx, ...prev]);
-    } catch (error) {
+      await transactionsService.processTransaction(payload);
+      toast.success('Transacción completada exitosamente.');
+      await fetchTransactions(); // Recargar la lista
+    } catch (error: unknown) {
       console.error('Failed to create transaction', error);
-      // Opcional: Mostrar un toast de error aquí
     } finally {
       setIsSubmitting(false);
     }

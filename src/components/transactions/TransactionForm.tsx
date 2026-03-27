@@ -1,121 +1,267 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import type { TransactionInsert, TransactionType } from '@/types/transaction';
+import { WalletIcon, ArrowRightIcon, ArrowLeftIcon, CheckCircleIcon } from 'lucide-react';
+import { inventoryService } from '@/services/inventoryService';
+
+import { StepperHeader } from './StepperHeader';
+import { StepCustomer } from './StepCustomer';
+import { StepInventory } from './StepInventory';
+import { StepTransaction } from './StepTransaction';
+import type {
+  CustomerFormData,
+  InventoryFormData,
+  InventoryItem,
+  TransactionFormData,
+  TransactionPayload,
+} from './transaction.types';
 
 interface TransactionFormProps {
-  onSubmit: (data: Omit<TransactionInsert, 'company_id' | 'user_id'>) => Promise<void>;
+  onSubmit: (data: TransactionPayload) => Promise<void>;
   isLoading: boolean;
 }
 
+// Valores iniciales extraídos para facilitar el reseteo
+const INITIAL_CUSTOMER: CustomerFormData = { national_id: '', full_name: '', phone: '' };
+const INITIAL_INVENTORY: InventoryFormData = {
+  action: 'new',
+  id: '',
+  name: '',
+  category: '',
+  status: 'bought',
+  amount_paid: '',
+  due_date: '',
+};
+const INITIAL_TRANSACTION: TransactionFormData = { type: 'expense', amount: '', concept: '' };
+
+const TOTAL_STEPS = 3;
+
+/**
+ * Wizard de 3 pasos para registrar una operación completa:
+ * 1. Identificar al cliente
+ * 2. Registrar o vincular un artículo
+ * 3. Asentar el movimiento de caja
+ */
 export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<TransactionType>('sell');
-  const [amount, setAmount] = useState<string>('');
-  const [concept, setConcept] = useState('');
+  const [step, setStep] = useState(1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount || isNaN(Number(amount))) return;
+  const [customer, setCustomer] = useState<CustomerFormData>(INITIAL_CUSTOMER);
+  const [inventory, setInventory] = useState<InventoryFormData>(INITIAL_INVENTORY);
+  const [transaction, setTransaction] = useState<TransactionFormData>(INITIAL_TRANSACTION);
 
-    await onSubmit({
-      type,
-      amount: Number(amount),
-      concept,
-    });
-    
-    // Reseteamos el form al enviar
-    setOpen(false);
-    setAmount('');
-    setConcept('');
-    setType('sell');
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+
+  // Cargar artículos de inventario cuando se abre el dialog.
+  // Mapeamos los datos crudos de Supabase al tipo InventoryItem local,
+  // convirtiendo los nullables a strings vacíos para mantener compatibilidad de tipos.
+  useEffect(() => {
+    if (open) {
+      inventoryService
+        .getInventoryItems()
+        .then((rows) => {
+          if (!rows) return;
+          const mapped: InventoryItem[] = rows
+            .filter((r) => r.id && r.name)
+            .map((r) => ({
+              id: r.id,
+              name: r.name ?? '',
+              category: r.category ?? '',
+              status: (r.status ?? 'bought') as InventoryItem['status'],
+            }));
+          setInventoryItems(mapped);
+        })
+        .catch(console.error);
+    }
+  }, [open]);
+
+  /**
+   * Sincroniza el tipo y el monto de la transacción en función de la acción de inventario.
+   * Usamos useMemo para derivar los valores sin llamar a setState dentro de un effect.
+   */
+  const derivedTransaction = useMemo<TransactionFormData>(() => {
+    if (inventory.action === 'new') {
+      return { ...transaction, type: 'expense', amount: inventory.amount_paid };
+    }
+    if (inventory.action === 'existing') {
+      return { ...transaction, type: 'income' };
+    }
+    return transaction;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inventory.action, inventory.amount_paid]);
+
+  // Aplicar los valores derivados al estado cuando cambia la acción o el monto
+  useEffect(() => {
+    setTransaction(derivedTransaction);
+  }, [derivedTransaction]);
+
+  const handleCustomerChange = (field: keyof CustomerFormData, value: string) => {
+    setCustomer((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleInventoryChange = (field: keyof InventoryFormData, value: string) => {
+    setInventory((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleInventoryActionChange = (action: InventoryFormData['action']) => {
+    setInventory((prev) => ({ ...prev, action }));
+  };
+
+  const handleTransactionChange = (field: keyof TransactionFormData, value: string) => {
+    setTransaction((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetForm = () => {
+    setStep(1);
+    setCustomer(INITIAL_CUSTOMER);
+    setInventory(INITIAL_INVENTORY);
+    setTransaction(INITIAL_TRANSACTION);
+  };
+
+  const handleSubmit = async () => {
+    await onSubmit({
+      customer: {
+        national_id: customer.national_id || undefined,
+        full_name: customer.full_name || undefined,
+        phone: customer.phone || undefined,
+      },
+      inventory: {
+        action: inventory.action,
+        id: inventory.action === 'existing' ? inventory.id : undefined,
+        name: inventory.name,
+        category: inventory.category,
+        status: inventory.status,
+        amount_paid: inventory.amount_paid ? Number(inventory.amount_paid) : undefined,
+        due_date: inventory.status === 'pawned' ? inventory.due_date : undefined,
+      },
+      transaction: {
+        type: transaction.type,
+        amount: Number(transaction.amount),
+        concept: transaction.concept,
+      },
+    });
+
+    setOpen(false);
+    resetForm();
+  };
+
+  // Validaciones por paso
+  const isStep1Valid = !!customer.national_id && !!customer.full_name;
+  const isStep2Valid =
+    inventory.action === 'none' ||
+    (inventory.action === 'existing' && !!inventory.id) ||
+    (inventory.action === 'new' && !!inventory.name && !!inventory.amount_paid);
+  const isStep3Valid = !!transaction.amount && !!transaction.concept;
+
+  const canAdvance = step === 1 ? isStep1Valid : step === 2 ? isStep2Valid : isStep3Valid;
+
+  const nextStep = () => {
+    if (canAdvance && step < TOTAL_STEPS) setStep((s) => s + 1);
+  };
+  const prevStep = () => setStep((s) => Math.max(1, s - 1));
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
-        Nueva Transacción
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Registrar Transacción</DialogTitle>
-          <DialogDescription>
-            Añade los detalles de la nueva compra, venta o préstamo.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="type">Tipo de Operación</Label>
-            <Select
-              value={type}
-              onValueChange={(val) => setType(val as TransactionType)}
-            >
-              <SelectTrigger id="type">
-                <SelectValue placeholder="Seleccione un tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="buy">Compra</SelectItem>
-                <SelectItem value="sell">Venta</SelectItem>
-                <SelectItem value="loan">Préstamo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) resetForm();
+      }}
+    >
+      {/* Base UI no soporta asChild; usamos render para componer el trigger con nuestro Button */}
+      <DialogTrigger
+        render={
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all font-semibold px-5 py-2">
+            <WalletIcon className="w-4 h-4 mr-2" />
+            Nueva Transacción
+          </Button>
+        }
+      />
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">Monto ($)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              required
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-outline/50 bg-background shadow-2xl">
+        {/* Encabezado con stepper */}
+        <div className="bg-surface border-b border-outline px-6 py-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-on-surface">
+              Módulo de Operaciones Central
+            </DialogTitle>
+          </DialogHeader>
+          <StepperHeader currentStep={step} totalSteps={TOTAL_STEPS} />
+        </div>
+
+        {/* Contenido del paso activo */}
+        <div className="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {step === 1 && (
+            <StepCustomer data={customer} onChange={handleCustomerChange} />
+          )}
+          {step === 2 && (
+            <StepInventory
+              data={inventory}
+              inventoryItems={inventoryItems}
+              onChange={handleInventoryChange}
+              onActionChange={handleInventoryActionChange}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="concept">Concepto</Label>
-            <Input
-              id="concept"
-              placeholder="Ej. Anticipo por terreno lote 45"
-              value={concept}
-              onChange={(e) => setConcept(e.target.value)}
+          )}
+          {step === 3 && (
+            <StepTransaction
+              data={transaction}
+              invAction={inventory.action}
+              onChange={handleTransactionChange}
             />
-          </div>
+          )}
+        </div>
 
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading || !amount}>
-              {isLoading ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </DialogFooter>
-        </form>
+        {/* Barra de acciones */}
+        <div className="bg-surface border-t border-outline px-6 py-4 flex items-center justify-between">
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-secondary hover:bg-outline hover:text-on-surface transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            Cancelar
+          </Button>
+
+          <div className="flex gap-2">
+            {step > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                className="bg-background px-4"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" /> Atrás
+              </Button>
+            )}
+
+            {step < TOTAL_STEPS ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!canAdvance}
+                className="bg-on-surface text-surface hover:bg-on-surface/90 px-6"
+              >
+                Siguiente <ArrowRightIcon className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                disabled={isLoading || !isStep3Valid}
+                onClick={handleSubmit}
+                className="bg-primary hover:bg-primary/90 shadow-primary/20 shadow-lg px-6 font-semibold"
+              >
+                {isLoading ? 'Registrando...' : 'Finalizar Transacción'}
+                <CheckCircleIcon className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
