@@ -27,7 +27,7 @@ interface TransactionFormProps {
   isLoading: boolean;
 }
 
-// Valores iniciales extraídos para facilitar el reseteo
+// Valores iniciales del wizard — se usan también en el reseteo
 const INITIAL_CUSTOMER: CustomerFormData = { national_id: '', full_name: '', phone: '' };
 const INITIAL_INVENTORY: InventoryFormData = {
   action: 'new',
@@ -44,23 +44,23 @@ const TOTAL_STEPS = 3;
 
 /**
  * Wizard de 3 pasos para registrar una operación completa:
- * 1. Identificar al cliente
- * 2. Registrar o vincular un artículo
- * 3. Asentar el movimiento de caja
+ * 1. Identificar al cliente (con búsqueda por debounce)
+ * 2. Registrar/vincular artículo o marcar como solo caja
+ * 3. Registrar el asiento de caja con validaciones
  */
 export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
 
+  // Estado que indica si el usuario intentó avanzar sin cumplir las validaciones
+  const [stepSubmitted, setStepSubmitted] = useState(false);
+
   const [customer, setCustomer] = useState<CustomerFormData>(INITIAL_CUSTOMER);
   const [inventory, setInventory] = useState<InventoryFormData>(INITIAL_INVENTORY);
   const [transaction, setTransaction] = useState<TransactionFormData>(INITIAL_TRANSACTION);
-
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-  // Cargar artículos de inventario cuando se abre el dialog.
-  // Mapeamos los datos crudos de Supabase al tipo InventoryItem local,
-  // convirtiendo los nullables a strings vacíos para mantener compatibilidad de tipos.
+  // Carga el inventario disponible al abrir el dialog
   useEffect(() => {
     if (open) {
       inventoryService
@@ -82,21 +82,22 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
   }, [open]);
 
   /**
-   * Sincroniza el tipo y el monto de la transacción en función de la acción de inventario.
-   * Usamos useMemo para derivar los valores sin llamar a setState dentro de un effect.
+   * Sincronización reactiva: cuando cambia la acción de inventario o el monto,
+   * actualizamos el tipo y monto de la transacción sin usar setState en un effect.
    */
   const derivedTransaction = useMemo<TransactionFormData>(() => {
     if (inventory.action === 'new') {
+      // Compra / empeño → egreso, monto heredado del artículo
       return { ...transaction, type: 'expense', amount: inventory.amount_paid };
     }
     if (inventory.action === 'existing') {
+      // Venta → ingreso
       return { ...transaction, type: 'income' };
     }
     return transaction;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventory.action, inventory.amount_paid]);
 
-  // Aplicar los valores derivados al estado cuando cambia la acción o el monto
   useEffect(() => {
     setTransaction(derivedTransaction);
   }, [derivedTransaction]);
@@ -119,12 +120,17 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
 
   const resetForm = () => {
     setStep(1);
+    setStepSubmitted(false);
     setCustomer(INITIAL_CUSTOMER);
     setInventory(INITIAL_INVENTORY);
     setTransaction(INITIAL_TRANSACTION);
   };
 
   const handleSubmit = async () => {
+    if (!isStep3Valid) {
+      setStepSubmitted(true);
+      return;
+    }
     await onSubmit({
       customer: {
         national_id: customer.national_id || undefined,
@@ -151,20 +157,35 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
     resetForm();
   };
 
-  // Validaciones por paso
+  // Reglas de validación: el Step 1 requiere cédula + nombre (el nombre lo llena la búsqueda o el usuario)
   const isStep1Valid = !!customer.national_id && !!customer.full_name;
   const isStep2Valid =
     inventory.action === 'none' ||
     (inventory.action === 'existing' && !!inventory.id) ||
-    (inventory.action === 'new' && !!inventory.name && !!inventory.amount_paid);
-  const isStep3Valid = !!transaction.amount && !!transaction.concept;
+    (inventory.action === 'new' &&
+      !!inventory.name &&
+      !!inventory.category &&
+      !!inventory.amount_paid &&
+      (inventory.status !== 'pawned' || !!inventory.due_date));
+  const isStep3Valid =
+    !!transaction.amount && Number(transaction.amount) > 0 && !!transaction.concept.trim();
 
   const canAdvance = step === 1 ? isStep1Valid : step === 2 ? isStep2Valid : isStep3Valid;
 
   const nextStep = () => {
-    if (canAdvance && step < TOTAL_STEPS) setStep((s) => s + 1);
+    if (!canAdvance) {
+      // Muestra errores de validación en los campos del paso actual
+      setStepSubmitted(true);
+      return;
+    }
+    setStepSubmitted(false);
+    if (step < TOTAL_STEPS) setStep((s) => s + 1);
   };
-  const prevStep = () => setStep((s) => Math.max(1, s - 1));
+
+  const prevStep = () => {
+    setStepSubmitted(false);
+    setStep((s) => Math.max(1, s - 1));
+  };
 
   return (
     <Dialog
@@ -174,7 +195,7 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
         if (!val) resetForm();
       }}
     >
-      {/* Base UI no soporta asChild; usamos render para componer el trigger con nuestro Button */}
+      {/* Base UI usa render= en lugar de asChild */}
       <DialogTrigger
         render={
           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all font-semibold px-5 py-2">
@@ -184,11 +205,11 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
         }
       />
 
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-outline/50 bg-background shadow-2xl">
+      <DialogContent className="sm:max-w-[680px] p-0 overflow-hidden border-outline/50 bg-background shadow-2xl">
         {/* Encabezado con stepper */}
-        <div className="bg-surface border-b border-outline px-6 py-4">
+        <div className="bg-surface border-b border-outline px-6 pt-4 pb-0">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-on-surface">
+            <DialogTitle className="text-lg font-bold text-on-surface">
               Módulo de Operaciones Central
             </DialogTitle>
           </DialogHeader>
@@ -196,7 +217,7 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
         </div>
 
         {/* Contenido del paso activo */}
-        <div className="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="px-6 py-6 max-h-[65vh] overflow-y-auto custom-scrollbar">
           {step === 1 && (
             <StepCustomer data={customer} onChange={handleCustomerChange} />
           )}
@@ -206,6 +227,7 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
               inventoryItems={inventoryItems}
               onChange={handleInventoryChange}
               onActionChange={handleInventoryActionChange}
+              submitted={stepSubmitted}
             />
           )}
           {step === 3 && (
@@ -213,6 +235,7 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
               data={transaction}
               invAction={inventory.action}
               onChange={handleTransactionChange}
+              submitted={stepSubmitted}
             />
           )}
         </div>
@@ -222,7 +245,7 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
           <Button
             type="button"
             variant="ghost"
-            className="text-secondary hover:bg-outline hover:text-on-surface transition-colors"
+            className="text-secondary hover:bg-outline hover:text-on-surface"
             onClick={() => setOpen(false)}
           >
             Cancelar
@@ -234,9 +257,9 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                className="bg-background px-4"
+                className="bg-background"
               >
-                <ArrowLeftIcon className="w-4 h-4 mr-2" /> Atrás
+                <ArrowLeftIcon className="w-4 h-4 mr-1.5" /> Atrás
               </Button>
             )}
 
@@ -244,20 +267,19 @@ export function TransactionForm({ onSubmit, isLoading }: TransactionFormProps) {
               <Button
                 type="button"
                 onClick={nextStep}
-                disabled={!canAdvance}
                 className="bg-on-surface text-surface hover:bg-on-surface/90 px-6"
               >
-                Siguiente <ArrowRightIcon className="w-4 h-4 ml-2" />
+                Siguiente <ArrowRightIcon className="w-4 h-4 ml-1.5" />
               </Button>
             ) : (
               <Button
                 type="button"
-                disabled={isLoading || !isStep3Valid}
+                disabled={isLoading}
                 onClick={handleSubmit}
                 className="bg-primary hover:bg-primary/90 shadow-primary/20 shadow-lg px-6 font-semibold"
               >
                 {isLoading ? 'Registrando...' : 'Finalizar Transacción'}
-                <CheckCircleIcon className="w-4 h-4 ml-2" />
+                <CheckCircleIcon className="w-4 h-4 ml-1.5" />
               </Button>
             )}
           </div>

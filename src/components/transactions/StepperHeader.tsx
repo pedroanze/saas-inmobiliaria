@@ -8,52 +8,53 @@ interface StepperHeaderProps {
 }
 
 /**
- * Cabecera visual del wizard con línea de progreso y bullets numerados.
- * currentStep es 1-indexed.
+ * Barra de progreso del wizard de transacciones.
+ * Diseño limpio con dots y línea conectora sin animaciones de escala.
  */
 export function StepperHeader({ currentStep, totalSteps = 3 }: StepperHeaderProps) {
-  // El ancho de la línea de progreso va de 0% (paso 1) a 100% (último paso)
-  const progressWidth = `${((currentStep - 1) / (totalSteps - 1)) * 100}%`;
+  const p = (currentStep - 1) / (totalSteps - 1); // fracción de progreso [0, 1]
 
   return (
-    <div className="relative mt-8 mb-4 px-12">
-      {/* Línea base */}
-      <div className="absolute top-1/2 left-12 right-12 h-[2px] bg-outline transform -translate-y-1/2 z-0" />
-      {/* Línea de progreso */}
+    <div className="relative flex items-center justify-between mt-8 mb-6 px-6">
+      {/* Línea de fondo (va de dot 1 a dot N) */}
+      <div className="absolute left-6 right-6 top-4 h-[2px] bg-outline/60 z-0" />
+
+      {/* Línea de progreso activa.
+          width = p × (100% − 48px) porque left-6 aporta 24px y right-6 otros 24px;
+          usar 100% sin descuento hace que en el último paso se extienda 24px de más. */}
       <div
-        className="absolute top-1/2 left-12 h-[2px] bg-primary transform -translate-y-1/2 z-0 transition-all duration-500 ease-in-out"
-        style={{ width: progressWidth }}
+        className="absolute left-6 top-4 h-[2px] bg-primary z-0 transition-[width] duration-400 ease-out"
+        style={{ width: `calc(${p * 100}% - ${p * 48}px)` }}
       />
 
-      <div className="relative z-10 flex justify-between">
-        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((num) => {
-          const isCompleted = currentStep > num;
-          const isActive = currentStep === num;
+      {/* Dots de cada paso */}
+      {Array.from({ length: totalSteps }, (_, i) => i + 1).map((num) => {
+        const isCompleted = currentStep > num;
+        const isActive = currentStep === num;
 
-          return (
-            <div key={num} className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow transition-all duration-300 ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 scale-110'
-                    : isCompleted
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-surface border border-outline text-secondary'
-                }`}
-              >
-                {isCompleted ? <CheckCircleIcon className="w-5 h-5" /> : num}
-              </div>
-              <span
-                className={`text-[11px] font-semibold mt-2 absolute -bottom-5 whitespace-nowrap ${
-                  currentStep >= num ? 'text-primary' : 'text-secondary'
-                }`}
-              >
-                {STEP_LABELS[num - 1]}
-              </span>
+        return (
+          <div key={num} className="relative z-10 flex flex-col items-center gap-2">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-200 ${
+                isCompleted
+                  ? 'bg-primary text-primary-foreground'
+                  : isActive
+                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/15'
+                    : 'bg-background border-2 border-outline text-secondary'
+              }`}
+            >
+              {isCompleted ? <CheckCircleIcon className="w-4 h-4" /> : num}
             </div>
-          );
-        })}
-      </div>
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-wide transition-colors duration-200 ${
+                currentStep >= num ? 'text-primary' : 'text-secondary/60'
+              }`}
+            >
+              {STEP_LABELS[num - 1]}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

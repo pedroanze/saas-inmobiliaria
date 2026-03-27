@@ -112,6 +112,31 @@
   --sidebar-ring: #d47a55;
 }
 
+/* ─── Utilidades del Wizard de Transacciones ─────────────────────────── */
+@layer utilities {
+  /** Transición de entrada suave entre pasos del wizard (fade puro, sin slide) */
+  .fade-in-step {
+    animation: fadeInStep 0.2s ease-out both;
+  }
+
+  @keyframes fadeInStep {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /** Scrollbar discreto para el panel interno del dialog */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+}
+
 .dark {
   --background: #2a2724;
   --foreground: #fafaf8;
