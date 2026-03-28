@@ -8,7 +8,11 @@ export function Sidebar() {
   return (
     <aside className="bg-surface hidden w-64 flex-col border-r lg:flex">
       <div className="flex h-16 items-center justify-center border-b px-6">
-        <h1 className="text-primary text-xl font-bold tracking-tight">SaaS Inmobiliaria</h1>
+        <img
+          src="https://res.cloudinary.com/dkoqe8las/image/upload/v1774657910/logo_prestasys_1_bqzoew.png"
+          alt="Prestasys"
+          className="h-8 w-auto object-contain"
+        />
       </div>
       <nav className="flex-1 space-y-2 p-4">
         {navigationLinks.map((item) => {

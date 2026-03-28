@@ -50,8 +50,12 @@ export function TopNav() {
             <span className="sr-only">Toggle navigation menu</span>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
-            <div className="flex h-16 items-center justify-center border-b">
-              <h1 className="text-primary text-xl font-bold tracking-tight">SaaS Inmobiliaria</h1>
+            <div className="flex h-16 items-center justify-center border-b px-6">
+              <img
+                src="https://res.cloudinary.com/dkoqe8las/image/upload/v1774657910/logo_prestasys_1_bqzoew.png"
+                alt="Prestasys"
+                className="h-8 w-auto object-contain"
+              />
             </div>
             <nav className="flex flex-col space-y-2 p-4">
               {navigationLinks.map((item) => {
@@ -80,8 +84,12 @@ export function TopNav() {
       <div className="hidden lg:block text-on-surface font-medium">
         ¡Hola, {userName}!
       </div>
-      <div className="lg:hidden text-on-surface font-semibold tracking-tight">
-        Panel
+      <div className="lg:hidden">
+        <img
+          src="https://res.cloudinary.com/dkoqe8las/image/upload/v1774657910/logo_prestasys_1_bqzoew.png"
+          alt="Prestasys"
+          className="h-7 w-auto object-contain"
+        />
       </div>
 
       <div className="flex items-center gap-4">
