@@ -1,4 +1,32 @@
-import { ZapIcon } from 'lucide-react';
+import { CheckIcon, ZapIcon, StarIcon } from 'lucide-react';
+
+const PLANS = [
+  {
+    icon: ZapIcon,
+    name: 'Pro',
+    tagline: 'Para negocios que empiezan a escalar',
+    features: [
+      'Hasta 500 transacciones / mes',
+      'Inventario ilimitado',
+      'Libro mayor digital',
+      'Registro de clientes',
+      'Soporte por WhatsApp',
+    ],
+  },
+  {
+    icon: StarIcon,
+    name: 'Ultra',
+    tagline: 'Para operaciones de alto volumen',
+    features: [
+      'Transacciones ilimitadas',
+      'Múltiples usuarios y roles',
+      'Reportes financieros avanzados',
+      'Exportación a Excel / PDF',
+      'Soporte prioritario 24/7',
+      'Integración con caja registradora',
+    ],
+  },
+];
 
 export function PricingSection() {
   return (
@@ -12,25 +40,48 @@ export function PricingSection() {
           Sin contratos. Sin sorpresas. Cancela cuando quieras.
         </p>
 
-        <div className="max-w-sm mx-auto bg-white border-2 border-dashed border-outline rounded-3xl p-12 space-y-5">
-          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
-            <ZapIcon className="w-7 h-7 text-primary" />
-          </div>
-          <h3 className="text-2xl font-bold text-on-surface">Próximamente</h3>
-          <p className="text-sm text-secondary leading-relaxed">
-            Estamos trabajando en planes accesibles para negocios de todos los tamaños.
-            Déjanos tu correo y te avisamos cuando estén disponibles.
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              placeholder="tu@correo.com"
-              className="flex-1 border border-outline rounded-lg px-3 py-2 text-sm bg-[#fafaf8] focus:outline-none focus:border-primary/50 transition-colors"
-            />
-            <button className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-              Avisar
-            </button>
-          </div>
+        {/* Cards con altura uniforme — el botón siempre queda pegado abajo */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch">
+          {PLANS.map(({ icon: Icon, name, tagline, features }) => (
+            <div
+              key={name}
+              className="bg-white rounded-2xl border-2 border-outline p-8 text-left flex flex-col gap-6"
+            >
+              {/* Header */}
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-primary/10">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-on-surface">{name}</h3>
+                  <p className="text-xs text-secondary">{tagline}</p>
+                </div>
+              </div>
+
+              {/* Precio — próximamente */}
+              <div className="py-4 border-y border-outline">
+                <p className="text-2xl font-black text-on-surface">Próximamente</p>
+                <p className="text-xs text-secondary mt-1">
+                  Estamos definiendo el precio final. Te avisamos cuando esté listo.
+                </p>
+              </div>
+
+              {/* Features — flex-1 para empujar el botón al fondo */}
+              <ul className="space-y-3 flex-1">
+                {features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-on-surface">
+                    <CheckIcon className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {/* Botón siempre en la parte inferior gracias a flex-col + flex-1 en features */}
+              <button className="w-full py-2.5 rounded-xl text-sm font-semibold border border-outline text-on-surface hover:border-primary/40 hover:text-primary transition-colors mt-auto">
+                Me interesa
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </section>

@@ -135,6 +135,12 @@
     background-color: var(--border);
     border-radius: 9999px;
   }
+
+  /** Levitación suave para los badges flotantes del Hero */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
 }
 
 .dark {

@@ -43,20 +43,13 @@ export function LandingNav() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm font-semibold text-secondary hover:text-on-surface transition-colors"
-          >
-            Iniciar Sesión
-          </Link>
-          <Link
-            to="/login"
-            className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-          >
-            Comenzar gratis
-          </Link>
-        </div>
+        {/* Botón primario sin shadow */}
+        <Link
+          to="/login"
+          className="hidden md:inline-flex text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          Iniciar Sesión
+        </Link>
 
         <button
           className="md:hidden text-secondary hover:text-on-surface p-2"
@@ -78,15 +71,12 @@ export function LandingNav() {
               {l.label}
             </button>
           ))}
-          <div className="pt-3 border-t border-outline/50 space-y-2">
-            <Link to="/login" className="block text-center text-sm font-semibold text-secondary py-2">
-              Iniciar Sesión
-            </Link>
+          <div className="pt-3 border-t border-outline/50">
             <Link
               to="/login"
-              className="block text-center bg-primary text-white text-sm font-semibold px-4 py-2 rounded-lg"
+              className="block text-center text-sm font-semibold text-on-surface border border-outline py-2.5 rounded-lg hover:border-primary/40 hover:text-primary transition-colors"
             >
-              Comenzar gratis
+              Iniciar Sesión
             </Link>
           </div>
         </div>

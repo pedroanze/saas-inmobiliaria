@@ -28,25 +28,15 @@ export function ContactSection() {
               Hablemos
             </h2>
             <p className="text-secondary leading-relaxed">
-              Escríbenos y te ayudamos a ver si Prestasys es la solución correcta para tu negocio.
-              Sin presiones, sin compromiso.
+              Escríbenos y te ayudamos a ver si Prestasys es la solución correcta para tu
+              negocio. Sin presiones, sin compromiso.
             </p>
           </div>
 
           <div className="space-y-4">
             {[
-              {
-                icon: PhoneIcon,
-                label: 'WhatsApp',
-                value: '+591 79288990',
-                href: WA_HREF,
-              },
-              {
-                icon: MapPinIcon,
-                label: 'Región',
-                value: 'Bolivia · Latinoamérica',
-                href: undefined,
-              },
+              { icon: PhoneIcon, label: 'WhatsApp', value: '+591 79288990', href: WA_HREF },
+              { icon: MapPinIcon, label: 'Región', value: 'Bolivia · Latinoamérica', href: undefined },
             ].map(({ icon: Icon, label, value, href }) => (
               <div key={label} className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
@@ -87,29 +77,51 @@ export function ContactSection() {
             className="bg-[#fafaf8] border border-outline rounded-2xl p-8 space-y-4"
           >
             <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { id: 'contactName', label: 'Nombre', placeholder: 'Tu nombre' },
-                {
-                  id: 'contactBusiness',
-                  label: 'Negocio',
-                  placeholder: 'Nombre de tu casa de empeño',
-                },
-              ].map((f) => (
-                <div key={f.id} className="space-y-1.5">
-                  <label
-                    htmlFor={f.id}
-                    className="text-xs font-semibold text-secondary uppercase tracking-wider block"
-                  >
-                    {f.label}
-                  </label>
-                  <input
-                    id={f.id}
-                    required
-                    placeholder={f.placeholder}
-                    className="w-full border border-outline bg-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                  />
-                </div>
-              ))}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="contactName"
+                  className="text-xs font-semibold text-secondary uppercase tracking-wider block"
+                >
+                  Nombre
+                </label>
+                <input
+                  id="contactName"
+                  required
+                  placeholder="Tu nombre"
+                  className="w-full border border-outline bg-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="contactPhone"
+                  className="text-xs font-semibold text-secondary uppercase tracking-wider block"
+                >
+                  Celular / WhatsApp
+                </label>
+                <input
+                  id="contactPhone"
+                  type="tel"
+                  required
+                  placeholder="+591 7X XXX XXX"
+                  className="w-full border border-outline bg-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="contactBusiness"
+                className="text-xs font-semibold text-secondary uppercase tracking-wider block"
+              >
+                Negocio
+              </label>
+              <input
+                id="contactBusiness"
+                required
+                placeholder="Nombre de tu casa de empeño"
+                className="w-full border border-outline bg-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -121,7 +133,7 @@ export function ContactSection() {
               </label>
               <textarea
                 id="contactMessage"
-                rows={4}
+                rows={3}
                 required
                 placeholder="Cuéntanos sobre tu negocio..."
                 className="w-full border border-outline bg-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
